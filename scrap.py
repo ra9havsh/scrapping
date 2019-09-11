@@ -12,7 +12,7 @@ import time
 
 driver = webdriver.Chrome("\chromium_driver\chromedriver.exe")
 url = "https://www.google.com/maps?hl=en"
-driver.get(url)
+
 id_count = 0
 id=[]
 name=[]
@@ -31,18 +31,19 @@ def start():
         time.sleep(2)
         try:
             driver.find_element_by_class_name('section-no-result')
-            driver.quit()
+            time.sleep(2)
         except NoSuchElementException:
             div = driver.find_elements_by_class_name('section-result')
 
             if len(div) < 1:
-                driver.quit()
+                time.sleep(1)
             else:
                 count = len(div)
-
-            scrapping(count)
+                scrapping(count)
     except TimeoutException:
         print("Loading took too much time!11111")
+        time.sleep(2)
+        start()
 
 #function for scrapping individual item
 def scrapping(count):
@@ -142,23 +143,37 @@ def scrapping(count):
         start()
     else:
         time.sleep(3)
-        driver.quit()
 
 
 #main function
-try:
-    element = WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.NAME, "q"))
-            )
-    driver.find_element_by_name('q').send_keys("futsal, baneshwor")
-    driver.find_element_by_id('searchbox-searchbutton').send_keys(Keys.ENTER)
-    start()
-except TimeoutException:
-    print("Loading took too much time!")
+def main():
+    cities=['baneshwor']
+    categories=['futsal']
+    search = []
 
-for i in range(len(id)):
-    print("id : {}, name : {}, address : {}, website : {}, plus_code : {}, raitng : {}, review : {}, url :{}".format(id[i],name[i],address[i],
-            website[i],plus_code[i],rating[i],review[i],web_url[i]))
+    for city in cities:
+        for cat in categories:
+            search.append(cat+", "+city)
 
+    try:
+        for s in search:
+            driver.get(url)
+            element = WebDriverWait(driver, 20).until(
+                        EC.presence_of_element_located((By.NAME, "q"))
+                    )
+            driver.find_element_by_name('q').send_keys(s)
+            driver.find_element_by_id('searchbox-searchbutton').send_keys(Keys.ENTER)
+            start()
+    except TimeoutException:
+        print("Loading took too much time!")
+
+    for i in range(len(id)):
+        print("id : {}, name : {}, address : {}, website : {}, plus_code : {}, raitng : {}, review : {}, url :{}".format(id[i],name[i],address[i],
+                website[i],plus_code[i],rating[i],review[i],web_url[i]))
+    df = pd.DataFrame({'id' : id, 'name' : name, 'address' : address, 'website' : website, 'plus_code' : plus_code, 'rating' : rating, 'review' : review, 'url' : url})
+    df.to_csv('scrap.csv', index=False, encoding='utf-8')
+
+if __name__ == '__main__':
+    main()
 
 
